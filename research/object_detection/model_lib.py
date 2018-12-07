@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+sys.path = ['/afs/cs.pitt.edu/usr0/key36/work2/WSOD'] + sys.path
 import copy
 import functools
 import os
@@ -29,7 +31,7 @@ from object_detection import inputs
 from object_detection.builders import graph_rewriter_builder
 from object_detection.builders import model_builder
 from object_detection.builders import optimizer_builder
-from object_detection.core import standard_fields as fields
+from object_detection.core import wsod_fields as fields
 from object_detection.utils import config_util
 from object_detection.utils import label_map_util
 from object_detection.utils import shape_utils
@@ -252,6 +254,10 @@ def create_model_fn(detection_model_fn, configs, hparams, use_tpu=False):
           groundtruth_keypoints_list=gt_keypoints_list,
           groundtruth_weights_list=gt_weights_list,
           groundtruth_is_crowd_list=gt_is_crowd_list)
+
+      if fields.InputDataFields.groundtruth_caption in labels:
+        gt_caption_list = labels[fields.InputDataFields.groundtruth_caption]
+      detection_model.provide_captions(groundtruth_caption_list=gt_caption_list)
 
     preprocessed_images = features[fields.InputDataFields.image]
     if use_tpu and train_config.use_bfloat16:

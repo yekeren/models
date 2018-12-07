@@ -26,8 +26,8 @@ from object_detection.builders import image_resizer_builder
 from object_detection.builders import model_builder
 from object_detection.builders import preprocessor_builder
 from object_detection.core import preprocessor
-from object_detection.core import standard_fields as fields
-from object_detection.data_decoders import tf_example_decoder
+from object_detection.core import wsod_fields as fields
+from object_detection.data_decoders import caption_tf_example_decoder as tf_example_decoder
 from object_detection.protos import eval_pb2
 from object_detection.protos import input_reader_pb2
 from object_detection.protos import model_pb2
@@ -185,7 +185,6 @@ def pad_input_data_to_static_shapes(tensor_dict, max_num_boxes, num_classes,
   Raises:
     ValueError: If groundtruth classes is neither rank 1 nor rank 2.
   """
-
   if not spatial_image_shape or spatial_image_shape == [-1, -1]:
     height, width = None, None
   else:
@@ -247,6 +246,11 @@ def pad_input_data_to_static_shapes(tensor_dict, max_num_boxes, num_classes,
     padding_shapes[fields.InputDataFields.
                    groundtruth_keypoint_visibilities] = padding_shape
 
+  if fields.InputDataFields.groundtruth_caption in tensor_dict:
+    tensor_shape = tensor_dict[fields.InputDataFields.groundtruth_caption].shape
+    padding_shape = [30]
+    padding_shapes[fields.InputDataFields.groundtruth_caption] = padding_shape
+
   padded_tensor_dict = {}
   for tensor_name in tensor_dict:
     padded_tensor_dict[tensor_name] = shape_utils.pad_or_clip_nd(
@@ -301,7 +305,8 @@ def _get_labels_dict(input_dict):
       fields.InputDataFields.num_groundtruth_boxes,
       fields.InputDataFields.groundtruth_boxes,
       fields.InputDataFields.groundtruth_classes,
-      fields.InputDataFields.groundtruth_weights
+      fields.InputDataFields.groundtruth_weights,
+      fields.InputDataFields.groundtruth_caption
   ]
   labels_dict = {}
   for key in required_label_keys:
